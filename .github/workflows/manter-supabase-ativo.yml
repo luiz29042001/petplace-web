@@ -1,0 +1,24 @@
+# Evita que o Supabase (plano Free) pause o projeto PetPlace por inatividade (pausa após 7 dias sem uso).
+# Faz uma consulta leve ao banco a cada 2 dias. A chave "publishable" é pública (já vai no app); o RLS
+# devolve lista vazia, então nenhum dado é exposto. Não coloque chave secret/service_role aqui.
+name: Manter Supabase ativo
+
+on:
+  schedule:
+    - cron: '17 9 */2 * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consulta leve ao banco
+        env:
+          SUPABASE_URL: https://rjnnljhpobcylnynlkej.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_pS58Ri1uWXfmpqVfN9vZHA_JVTovuxr
+        run: |
+          curl --fail --silent --show-error --retry 3 --retry-delay 10 \
+            "$SUPABASE_URL/rest/v1/pets?select=id&limit=1" \
+            -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -o /dev/null -w "HTTP %{http_code}\n"
